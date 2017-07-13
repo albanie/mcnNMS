@@ -73,7 +73,7 @@ __global__ void nmsKernel(const int numBoxes,
     int offset = BLOCKSIZE * colIdx ;
 
     // define shared memory for all the boxes processed by the current block
-    __shared__ float blockBoxes[BLOCKSIZE * 5] ;
+    __shared__ T blockBoxes[BLOCKSIZE * 5] ;
 
     // load bounding boxes and scores for current block into shared memory
     if (threadIdx.x < numCols)
