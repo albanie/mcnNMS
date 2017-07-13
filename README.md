@@ -31,7 +31,7 @@ Tomasz Malisiewicz's vectorised
 function.  However, if you have access to a GPU, it is possible to compute the 
 overlaps between boxes in parallel before picking indices in a single pass 
 over the inputs. This can yield a dramatic speed up when processing large 
-numbers of boxes, and it is the approach taken in object detection frameworks 
+numbers of boxes (it is the approach taken in object detection frameworks 
 like [Faster R-CNN](https://arxiv.org/abs/1506.01497) which perform this 
-operation on every forward pass for region proposal.  The code in this repo 
-is a direct port of Shaoqing Ren's nms mex code (linked above).
+operation on every forward pass for region proposal).  The code in this repo 
+is a direct port of Shaoqing Ren's nms mex code.
