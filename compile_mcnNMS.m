@@ -4,7 +4,25 @@ function compile_mcnNMS(varargin)
 tokens = {vl_rootnn, 'matlab', 'mex', '.build', 'last_compile_opts.mat'} ;
 last_args_path = fullfile(tokens{:}) ; opts = {} ;
 if exist(last_args_path, 'file'), opts = {load(last_args_path)} ; end
+opts = selectCompileOpts(opts) ;
 vl_compilenn(opts{:}, varargin{:}, 'preCompileFn', @preCompileFn) ;
+
+% -------------------------------------
+function opts = selectCompileOpts(opts) 
+% -------------------------------------
+% really need a better fix at some point
+keep = {'enableGpu', 'enableImreadJpeg', 'enableCudnn', 'enableDouble', ...
+        'imageLibrary', 'imageLibraryCompileFlags', ...
+        'imageLibraryLinkFlags', 'verbose', 'debug', 'cudaMethod', ...
+        'cudaRoot', 'cudaArch', 'defCudaArch', 'cudnnRoot', 'preCompileFn'} ; 
+s = opts{1} ;
+f = fieldnames(s) ;
+for i = 1:numel(f)
+  if ~ismember(f{i}, keep)
+    s = rmfield(s, f{i}) ;
+  end
+end
+opts = {s} ;
 
 % -----------------------------------------------------------------------------
 function [opts, mex_src, lib_src, flags] = preCompileFn(opts, mex_src, lib_src, flags)
