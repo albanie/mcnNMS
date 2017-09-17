@@ -27,38 +27,45 @@ opts = {s} ;
 % -----------------------------------------------------------------------------
 function [opts, mex_src, lib_src, flags] = preCompileFn(opts, mex_src, lib_src, flags)
 % -----------------------------------------------------------------------------
+  mcn_root = vl_rootnn() ;
+  root = fullfile(fileparts(mfilename('fullpath')), 'matlab') ;
 
-root = fullfile(fileparts(mfilename('fullpath')), 'matlab');
-mcn_root = vl_rootnn() ;
+  % Build inside the module path
+  flags.src_dir = fullfile(root, 'src') ;
+  flags.mex_dir = fullfile(root, 'mex') ;
+  flags.bld_dir = fullfile(flags.mex_dir, '.build') ;
+  implDir = fullfile(flags.bld_dir,'bits/impl') ;
+  if ~exist(implDir, 'dir'), mkdir(implDir) ; end
+  mex_src = {} ; lib_src = {} ; 
+  if opts.enableGpu, ext = 'cu' ;  else, ext = 'cpp' ; end
 
-% Build inside the module path
-flags.src_dir = fullfile(root, 'src') ;
-flags.mex_dir = fullfile(root, 'mex') ;
-flags.bld_dir = fullfile(flags.mex_dir, '.build');
-if ~exist(fullfile(flags.bld_dir,'bits','impl'), 'dir')
-  mkdir(fullfile(flags.bld_dir,'bits','impl')) ;
-end
+  % Add mcn dependencies
+  lib_src{end+1} = fullfile(mcn_root, 'matlab/src/bits', ['data.' ext]) ;
+  lib_src{end+1} = fullfile(mcn_root, 'matlab/src/bits', ['datamex.' ext]) ;
+  lib_src{end+1} = fullfile(mcn_root,'matlab/src/bits/impl/copy_cpu.cpp') ;
 
-lib_src = {} ; mex_src = {} ;
+  if opts.enableGpu
+    lib_src{end+1} = fullfile(mcn_root,'matlab/src/bits/datacu.cu') ;
+    lib_src{end+1} = fullfile(mcn_root,'matlab/src/bits/impl/copy_gpu.cu') ;
+  end
 
-if opts.enableGpu, ext = 'cu' ; else, ext = 'cpp' ; end
+  % ----------------------
+  % include required files
+  % ----------------------
+  % old style include - leave as comment in case users have different setup
+  %if ~isfield(flags, 'cc'), flags.cc = {inc} ; else, flags.cc{end+1} = inc ; end 
 
-% Add the required MCN Dependencies
-lib_src{end+1} = fullfile(mcn_root,'matlab','src','bits',['data.' ext]) ;
-lib_src{end+1} = fullfile(mcn_root,'matlab','src','bits',['datamex.' ext]) ;
-lib_src{end+1} = fullfile(mcn_root,'matlab','src','bits','impl','copy_cpu.cpp') ;
-if opts.enableGpu
-  lib_src{end+1} = fullfile(mcn_root,'matlab','src','bits','impl','copy_gpu.cu') ;
-  lib_src{end+1} = fullfile(mcn_root,'matlab','src','bits','datacu.cu') ;
-end
-flags.cc{end+1} = sprintf('-I%s', fullfile(mcn_root,'matlab','src'));
+  % new style include
+  inc = sprintf('-I"%s"', fullfile(mcn_root,'matlab','src')) ;
+  inc_local = sprintf('-I"%s"', fullfile(root, 'src')) ;
+  flags.base{end+1} = inc ; flags.base{end+1} = inc_local ;
 
-% Add module files
-lib_src{end+1} = fullfile(root,'src','bits',['nnbboxnms.' ext]) ;
-mex_src{end+1} = fullfile(root,'src',['vl_nnbboxnms.' ext]) ;
-% CPU-specific files
-lib_src{end+1} = fullfile(root,'src','bits','impl','bboxnms_cpu.cpp') ;
-% GPU-specific files
-if opts.enableGpu
-  lib_src{end+1} = fullfile(root,'src','bits','impl','bboxnms_gpu.cu') ;
-end
+  % Add module files
+  lib_src{end+1} = fullfile(root,'src','bits',['nnbboxnms.' ext]) ;
+  mex_src{end+1} = fullfile(root,'src',['vl_nnbboxnms.' ext]) ;
+  % CPU-specific files
+  lib_src{end+1} = fullfile(root,'src','bits','impl','bboxnms_cpu.cpp') ;
+  % GPU-specific files
+  if opts.enableGpu
+    lib_src{end+1} = fullfile(root,'src','bits','impl','bboxnms_gpu.cu') ;
+  end
