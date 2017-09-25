@@ -57,7 +57,6 @@ vl::nnbboxnms_forward(vl::Context& context,
   switch (boxes.getDeviceType())
   {
     case vl::VLDT_CPU:
-      printf("cpu version running\n") ;
       DISPATCH2(vl::VLDT_CPU) ;
       break ;
 
